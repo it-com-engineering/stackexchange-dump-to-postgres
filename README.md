@@ -33,7 +33,7 @@ Schema hints are taken from [a post on Meta.StackExchange](http://meta.stackexch
  - For some additional indexes and tables, you can also execute the the following;
    - `psql stackoverflow < ./sql/optional_post.sql`
    - Again, remember to user the correct database name here, if not `stackoverflow`.
-
+ - To load all data at once, including `Post` bodies and `Comment` text, you can use the `load_all.sh` script. Keep in mind this will drop all of your existing tables and re-load the data. 
 ## Caveats and TODOs
 
  - It prepares some indexes and views which may not be necessary for your analysis.
