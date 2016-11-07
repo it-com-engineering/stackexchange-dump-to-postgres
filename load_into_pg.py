@@ -158,6 +158,12 @@ parser.add_argument( '--with-post-body'
                    , default = False
                    )
 
+parser.add_argument( '--with-comment-text'
+                   , help   = 'Import the comments with the comment text. Only used if importing Comments.xml'
+                   , action = 'store_true'
+                   , default = False
+                   )
+
 args = parser.parse_args()
 
 table = args.table
@@ -204,6 +210,12 @@ elif table == 'Comments':
       , 'CreationDate'
       , 'UserId'
     ]
+
+    # If the user has not explicitly asked for loading the Comment bodies, we replace it with NULL                                                                                               
+
+    if not args.with_comment_text:
+        specialRules[('Comments', 'Text')] = 'NULL'
+
 elif table == 'Votes':
     keys = [
         'Id'
@@ -237,7 +249,7 @@ elif table == 'Posts':
       , 'CommunityOwnedDate'
     ]
 
-    # If the user has not explicitly asked for loading the body, we replace it with NULL
+    # If the user has not explicitly asked for loading the Post bodies, we replace it with NULL
     if not args.with_post_body:
         specialRules[('Posts', 'Body')] = 'NULL'
 
