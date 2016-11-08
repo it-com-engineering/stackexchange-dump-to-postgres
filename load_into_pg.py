@@ -164,6 +164,12 @@ parser.add_argument( '--with-comment-text'
                    , default = False
                    )
 
+parser.add_argument( '--suppress-drop-warning'
+                   , help    = 'Whether or not to suppress table drop confirmations.'
+                   , action  = 'store_true'
+                   , default = False
+                   )
+
 args = parser.parse_args()
 
 table = args.table
@@ -262,10 +268,14 @@ elif table == 'Tags':
       , 'WikiPostId'
     ]
 
-choice = raw_input('This will drop the {} table. Are you sure [y/n]?'.format(table))
+choice = 'no'
 
-if len(choice) > 0 and choice[0].lower() == 'y':
-    handleTable(table, keys, args.dbname, args.file, args.host, args.port, args.username, args.password)
+if not args.suppress_drop_warning:
+    choice = raw_input('This will drop the {} table. Are you sure [y/n]?'.format(table))
+
+    if len(choice) > 0 and choice[0].lower() == 'y':
+        handleTable(table, keys, args.dbname, args.file, args.host, args.port, args.username, args.password)
+    else:
+        print "Cancelled."
 else:
-    print "Cancelled."
-
+    handleTable(table, keys, args.dbname, args.file, args.host, args.port, args.username, args.password)
