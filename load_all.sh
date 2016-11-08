@@ -17,7 +17,15 @@ for i in "${objects[@]}"
 do
    : 
    printf "\nProcessing $i object ... \n"
-   ./load_into_pg.py $i --file $directory/$i.xml -d stackexchange --suppress-drop-warning
+
+   added_arguments=""
+   if [ $i = "Posts" ]; then
+     added_arguments="--with-post-body"
+   else
+     added_arguments="--with-comment-text"  
+   fi
+
+   ./load_into_pg.py $i --file $directory/$i.xml -d stackexchange --suppress-drop-warning $added_arguments
 done
 
 fi
