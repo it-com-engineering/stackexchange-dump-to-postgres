@@ -1,15 +1,26 @@
 #!/bin/bash
 
-filepath=$1
+directory_option=""
+database_option=""
 
-if [[ -n "$filepath" ]]; then
-    directory=$filepath
-fi
+while getopts "d:t:" opt; do
+  case $opt in
+    d)
+      database_option="-d $OPTARG"
+      ;;
+    t)
+      directory_option="--file $OPTARG/"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
 
 objects=(Badges Users Tags Votes Posts PostLinks Comments)
 
 read -p "This will drop all tables. Are you sure? " -n 1 -r
-echo    # (optional) move to a new line
+
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
 
@@ -18,14 +29,21 @@ do
    : 
    printf "\nProcessing $i object ... \n"
 
+   _directory_option=""
    added_arguments=""
    if [ $i = "Posts" ]; then
      added_arguments="--with-post-body"
-   else
+   elif [ $i = "Comments" ]; then
      added_arguments="--with-comment-text"  
    fi
 
-   ./load_into_pg.py $i --file $directory/$i.xml -d stackexchange --suppress-drop-warning $added_arguments
+
+   if [[ !  -z  $directory_option ]]
+   then
+       _directory_option=$directory_option$i.xml
+   fi
+
+   ./load_into_pg.py $i $_directory_option $database_option --suppress-drop-warning $added_arguments
 done
 
 fi

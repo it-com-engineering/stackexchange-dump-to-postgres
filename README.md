@@ -35,7 +35,9 @@ Schema hints are taken from [a post on Meta.StackExchange](http://meta.stackexch
    - Again, remember to user the correct database name here, if not `stackoverflow`.
  - Loading All Data at once
    - To load all data at once, including `Post` bodies and `Comment` text, you can use the `load_all.sh` script. Keep in mind this will drop all of your existing tables and re-load the data. 
-   - Call it using `./load_all.sh /path/to/xml/files/`
+   - Use the -t option to specify a directory where the XML files live
+   - Use the -d option to specify a database name
+   - Example `./load_all.sh -t /path/to/xml/files -d my_database`
 
 ## Caveats and TODOs
 
