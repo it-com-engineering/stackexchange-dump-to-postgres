@@ -116,10 +116,14 @@ def handleTable(table, keys, dbname, mbDbFile, mbHost, mbPort, mbUsername, mbPas
 
 #############################################################
 
+all_tables = ['Users', 'Badges', 'Posts', 'Tags', 'Votes','PostLinks','Comments']
+
+
 parser = argparse.ArgumentParser()
-parser.add_argument( 'table'
+parser.add_argument( '-t', '--table'
                    , help    = 'The table to work on.'
                    , choices = ['Users', 'Badges', 'Posts', 'Tags', 'Votes','PostLinks','Comments']
+                   , default = None
                    )
 
 parser.add_argument( '-d', '--dbname'
@@ -129,6 +133,11 @@ parser.add_argument( '-d', '--dbname'
 
 parser.add_argument( '-f', '--file'
                    , help    = 'Name of the file to extract data from.'
+                   , default = None
+                   )
+                   
+parser.add_argument( '--dir'
+                   , help    = 'Name of the directory where XML files are.'
                    , default = None
                    )
 
@@ -170,13 +179,20 @@ parser.add_argument( '--suppress-drop-warning'
                    , default = False
                    )
 
+parser.add_argument( '--all'
+                   , help    = 'Import all XML files, including Post bodies and Comment text.'
+                   , action  = 'store_true'
+                   , default = False
+                   )
+                   
+                   
 args = parser.parse_args()
 
-table = args.table
-keys = None
+selected_table = args.table
+        
+KeysHash = {}
 
-if table == 'Users':
-    keys = [
+KeysHash['Users'] = [
         'Id'
       , 'Reputation'
       , 'CreationDate'
@@ -192,23 +208,23 @@ if table == 'Users':
       , 'Age'
       , 'AccountId'
     ]
-elif table == 'Badges':
-    keys = [
+    
+KeysHash['Badges'] = [
         'Id'
       , 'UserId'
       , 'Name'
       , 'Date'
     ]
-elif table == 'PostLinks':
-    keys = [
+
+KeysHash['PostLinks'] =[
         'Id'
       , 'CreationDate'
       , 'PostId'
       , 'RelatedPostId'
       , 'LinkTypeId'
     ]
-elif table == 'Comments':
-    keys = [
+
+KeysHash['Comments'] = [
         'Id'
       , 'PostId'
       , 'Score'
@@ -217,13 +233,7 @@ elif table == 'Comments':
       , 'UserId'
     ]
 
-    # If the user has not explicitly asked for loading the Comment bodies, we replace it with NULL                                                                                               
-
-    if not args.with_comment_text:
-        specialRules[('Comments', 'Text')] = 'NULL'
-
-elif table == 'Votes':
-    keys = [
+KeysHash['Votes'] = [
         'Id'
       , 'PostId'
       , 'VoteTypeId'
@@ -231,8 +241,8 @@ elif table == 'Votes':
       , 'CreationDate'
       , 'BountyAmount'
     ]
-elif table == 'Posts':
-    keys = [
+    
+KeysHash['Posts'] = [
         'Id'
       , 'PostTypeId'
       , 'AcceptedAnswerId'
@@ -255,27 +265,48 @@ elif table == 'Posts':
       , 'CommunityOwnedDate'
     ]
 
-    # If the user has not explicitly asked for loading the Post bodies, we replace it with NULL
-    if not args.with_post_body:
-        specialRules[('Posts', 'Body')] = 'NULL'
-
-elif table == 'Tags':
-    keys = [
+KeysHash['Tags'] = [
         'Id'
       , 'TagName'
       , 'Count'
       , 'ExcerptPostId'
       , 'WikiPostId'
     ]
+	
+if args.all:
+	tables=all_tables
+	_name = "All tables"
+else:
+	tables=[selected_table]
+	_name = "the " + selected_table + " table"
+	
+
+if not args.with_comment_text:
+    specialRules[('Comments', 'Text')] = 'NULL'
+
+if not args.with_post_body:
+    specialRules[('Posts', 'Body')] = 'NULL'
 
 choice = 'no'
 
-if not args.suppress_drop_warning:
-    choice = raw_input('This will drop the {} table. Are you sure [y/n]?'.format(table))
-
-    if len(choice) > 0 and choice[0].lower() == 'y':
-        handleTable(table, keys, args.dbname, args.file, args.host, args.port, args.username, args.password)
-    else:
-        print "Cancelled."
+if args.suppress_drop_warning:
+	choice = "y"
 else:
-    handleTable(table, keys, args.dbname, args.file, args.host, args.port, args.username, args.password)
+	choice = raw_input('This will drop {}. Are you sure [y/n]?'.format(_name))
+	
+# TODO - need to handle args.suppress_drop_warning:
+
+if len(choice) > 0 and choice[0].lower() == 'y':			
+			
+	for _table in tables:
+	
+		if len(tables) > 1 and args.dir != None:
+			_file=args.dir + "/" + _table + ".xml"
+		else:
+			_file=args.file
+
+		print '\nProcessing ' + _table + ' table ...\n'
+		handleTable(_table, KeysHash[_table], args.dbname, _file, args.host, args.port, args.username, args.password)
+
+else:
+	print "Cancelled."
